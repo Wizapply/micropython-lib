@@ -163,7 +163,7 @@ class ILI9341:
             return
         self._writeblock(x, y, x, y, ustruct.pack(">H", color565(color)))
 
-    def fill_rectangle(self, x, y, w, h, color=None):
+    def fill_rect(self, x, y, w, h, color=None):
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
@@ -212,7 +212,7 @@ class ILI9341:
             mv = memoryview(self._buf)
             self._data(mv[:rest*2])
     
-    def text(self, x, y, text, color=None, font=None):
+    def text(self, text, x, y, color=None, font=None):
         font = font or self._font
         text_w  = font.get_width(text)
         div, rem = divmod(font.height(),8)
@@ -229,3 +229,6 @@ class ILI9341:
         fb = framebuf.FrameBuffer(buf, text_w, font.height(), framebuf.MONO_VLSB)
         self.blit(fb, x, y, text_w, font.height())
         return x + text_w
+
+    def show(self):
+        pass
