@@ -183,7 +183,7 @@ class ILI9341:
             mv = memoryview(self._buf)
             self._data(mv[:rest*2])
 
-    def erase(self):
+    def clear(self):
         self.fill_rectangle(0, 0, self.width, self.height)
     
     def circle(self, x, y, radius, fg_color=None, bg_color=None):
@@ -212,6 +212,9 @@ class ILI9341:
             mv = memoryview(self._buf)
             self._data(mv[:rest*2])
     
+    def line(self, x0, y, x1, y1, color=None):
+        pass
+
     def text(self, text, x, y, color=None, font=None):
         font = font or self._font
         text_w  = font.get_width(text)
