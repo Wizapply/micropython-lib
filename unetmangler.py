@@ -91,6 +91,7 @@ class Net_Mangle:
                 maximum_duration = 60000
                 sleepy.keep_awake(self.name, maximum_duration)
                 self.netif.active(True)
+                self.netif.disconnect()
 
                 self.connection_attempt_config = self.previous_connection_config
 
