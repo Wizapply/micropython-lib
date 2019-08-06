@@ -13,7 +13,7 @@ import network
 import sleepy
 
 _logger = ulogging.getLogger('eng.sw.unet')
-_logger.setLevel(ulogging.INFO)
+_logger.setLevel(ulogging.DEBUG)
 
 
 class Net_User:
@@ -24,7 +24,7 @@ class Net_User:
         self.connect_time = connect_time
 
 
-class Net_Mangle:
+class Net_Mangler:
     #pylint: disable=too-many-instance-attributes
     # Though I cannot seee that there are 10 of them?
     IDLE = 0
@@ -106,10 +106,12 @@ class Net_Mangle:
             return
 
         if self.state == self.CONNECTING:
-            if status in [ network.STAT_GOT_IP ]:  #pylint: disable=bad-whitespace
+            #if status in [ network.STAT_GOT_IP ]:  #pylint: disable=bad-whitespace
+            if self.netif.isconnected():
                 self.previous_connection_config = self.connection_attempt_config
                 self.wlan_ssid = self.netif.config('essid')
-                _logger.info('{}: Connecting {}...connected', self.name, self.wlan_ssid)
+                rssi = self.netif.status('rssi')
+                _logger.info('{}: Connecting {}...connected ({})', self.name, self.wlan_ssid, rssi)
                 self.state = self.CONNECTED
                 self.timestamp_start = time_now
                 return
