@@ -65,6 +65,7 @@ class Time_Mangler:
         if self.state == self.SETTING_TIME:
             try:
                 ntptime.settime()
+                time_now = utime.time()   # Time has changed, so we must change our cached value
             except OSError:
                 _logger.info('Setting time...failed ({})', utime.localtime())
                 self.next_set_timestamp += self.retry_interval_set
