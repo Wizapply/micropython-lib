@@ -163,7 +163,11 @@ class ILI9341:
             return
         self._writeblock(x, y, x, y, ustruct.pack(">H", color565(color)))
 
+<<<<<<< HEAD
     def fill_rect(self, x, y, w, h, color=None):
+=======
+    def fill_rectangle(self, x, y, w, h, color=None):
+>>>>>>> 2cddc678ab335a546f192bedd6f44889271f3a58
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
@@ -183,7 +187,11 @@ class ILI9341:
             mv = memoryview(self._buf)
             self._data(mv[:rest*2])
 
+<<<<<<< HEAD
     def clear(self):
+=======
+    def erase(self):
+>>>>>>> 2cddc678ab335a546f192bedd6f44889271f3a58
         self.fill_rectangle(0, 0, self.width, self.height)
     
     def circle(self, x, y, radius, fg_color=None, bg_color=None):
