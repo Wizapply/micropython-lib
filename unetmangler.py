@@ -13,7 +13,7 @@ import network
 import sleepy
 
 _logger = ulogging.getLogger('eng.sw.unet')
-_logger.setLevel(ulogging.DEBUG)
+_logger.setLevel(ulogging.INFO)
 
 
 class Net_User:

@@ -8,7 +8,7 @@ import utime
 import ntptime
 
 _logger = ulogging.getLogger('eng.sw.utime')
-_logger.setLevel(ulogging.DEBUG)
+_logger.setLevel(ulogging.INFO)
 
 
 class Time_Mangler:
