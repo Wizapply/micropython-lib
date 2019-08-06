@@ -63,16 +63,24 @@ class Time_Mangler:
             return
             
         if self.state == self.SETTING_TIME:
-            ntptime.settime()
+            try:
+                ntptime.settime()
+            except OSError:
+                _logger.info('Setting time...failed ({})', utime.localtime())
+                self.next_set_timestamp += self.retry_interval_set
+                if self.next_set_timestamp < time_now:  # If we have missed a timestamp, jump ahead
+                    self.next_set_timestamp = time_now + self.retry_interval_set
+                self.state = self.DISCONNECTING
+                
             _logger.info('Setting time...done ({})', utime.localtime())
             self.time_set_timestamp = time_now
+            self.next_set_timestamp += self.retry_interval_set
+            if self.next_set_timestamp < time_now:  # If we have missed a timestamp, jump ahead
+                self.next_set_timestamp = time_now + self.retry_interval_set
             self.state = self.DISCONNECTING
             return
 
         if self.state == self.DISCONNECTING:
-            self.next_set_timestamp += self.retry_interval_set
-            if self.next_set_timestamp < time_now:  # If we have missed a timestamp, jump ahead
-                self.next_set_timestamp = time_now + self.retry_interval_set
             self.net.disconnect('timemangler')
             _logger.debug('Disconnecting...done')
             _logger.info('Time mangler...done')
