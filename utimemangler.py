@@ -23,7 +23,7 @@ class Time_Mangler:
     def __init__(self, net):
         self.net = net
         
-        self.retry_interval_initial = 5
+        self.retry_interval_initial = 2
         self.retry_interval_not_set = 300  # 5 minutes
         self.retry_interval_set = 3600 # 1 hour
         self.timestamp = None
@@ -70,7 +70,9 @@ class Time_Mangler:
             return
 
         if self.state == self.DISCONNECTING:
-            self.next_set_timestamp = time_now + self.retry_interval_set
+            self.next_set_timestamp += self.retry_interval_set
+            if self.next_set_timestamp < time_now:  # If we have missed a timestamp, jump ahead
+                self.next_set_timestamp = time_now + self.retry_interval_set
             self.net.disconnect('timemangler')
             _logger.debug('Disconnecting...done')
             _logger.info('Time mangler...done')
