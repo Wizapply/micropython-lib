@@ -55,7 +55,7 @@ def request(method, url, data=None, json=None, headers={}, stream=None, timeout=
 
     s = usocket.socket(ai[0], ai[1], ai[2])
     if timeout: 
-        s.settimeout(timeout)
+        s.settimeout(timeout * 1000)  # timout in seconds, settimeout() expected ms
     try:
         s.connect(ai[-1])
         if proto == "https:":
