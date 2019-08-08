@@ -34,6 +34,12 @@ class Time_Mangler:
 
         self.state = self.NOT_SET
 
+    def confidence(self):
+        if self.state == self.TIME_SET:
+            return 1.0
+        else:
+            return 0.0
+
     def step(self):
         #pylint: disable=too-many-branches,too-many-statements
         time_now = utime.time()
