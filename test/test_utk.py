@@ -65,7 +65,7 @@ def test_Label():
     root.draw(ctx)
     
     assert(len(ctx._rects) == 2)
-    assert(ctx._rects[0] == (0, 0, 320, 240, tk.Color.WHITE))
+    assert(ctx._rects[0] == (0, 0, 320, 240, tk.Color.BLACK))
     assert(ctx._rects[1] == (100, 50, 70, 20, tk.Color.GREEN))
     assert(len(ctx._texts) == 1)
     assert(ctx._texts[0] == (100, 50, 70, 20, 'Text in Label l1', 'sans-20', tk.Color.RED, tk.Color.GREEN))
@@ -91,10 +91,10 @@ def test_nested():
     root.draw(ctx)
 
     assert(len(ctx._rects) == 6)
-    assert(ctx._rects[0] == (0, 0, 320, 240, tk.Color.WHITE))
+    assert(ctx._rects[0] == (0, 0, 320, 240, tk.Color.BLACK))
     assert(ctx._rects[1] == (100, 50, 70, 20, tk.Color.GREEN))
     assert(ctx._rects[2] == (300, 200, 80, 30, tk.Color.RED))
-    assert(ctx._rects[3] == (0, 0, 320, 240, tk.Color.WHITE))
+    assert(ctx._rects[3] == (0, 0, 320, 240, tk.Color.BLACK))
     assert(ctx._rects[4] == (1000, 50, 70, 20, tk.Color.GREEN))
     assert(ctx._rects[5] == (1200, 2050, 80, 30, tk.Color.RED))
 
@@ -116,11 +116,11 @@ def test_parent_resize():
     root.draw(ctx)
 
     assert(len(ctx._rects) == 2)
-    assert(ctx._rects[0] == (0, 0, 100+80, 50+20, tk.Color.WHITE))
-    assert(ctx._rects[1] == (100, 50, 80, 20, tk.Color.WHITE))
+    assert(ctx._rects[0] == (0, 0, 100+80, 50+20, tk.Color.BLACK))
+    assert(ctx._rects[1] == (100, 50, 80, 20, tk.Color.BLACK))
 
     assert(len(ctx._texts) == 1)
-    assert(ctx._texts[0] == (100, 50, 80, 20, 'Text in Label l1', 'sans-10', tk.Color.BLACK, tk.Color.WHITE))
+    assert(ctx._texts[0] == (100, 50, 80, 20, 'Text in Label l1', 'sans-10', tk.Color.WHITE, tk.Color.BLACK))
 
 
 def test_label_autosize():
@@ -133,11 +133,11 @@ def test_label_autosize():
     root.draw(ctx)
 
     assert(len(ctx._rects) == 2)
-    assert(ctx._rects[0] == (0, 0, 160, 10, tk.Color.WHITE))
-    assert(ctx._rects[1] == (0, 0, 160, 10, tk.Color.WHITE))
+    assert(ctx._rects[0] == (0, 0, 160, 10, tk.Color.BLACK))
+    assert(ctx._rects[1] == (0, 0, 160, 10, tk.Color.BLACK))
 
     assert(len(ctx._texts) == 1)
-    assert(ctx._texts[0] == (0, 0, 160, 10, 'Text in Label l1', 'sans-10', tk.Color.BLACK, tk.Color.WHITE))
+    assert(ctx._texts[0] == (0, 0, 160, 10, 'Text in Label l1', 'sans-10', tk.Color.WHITE, tk.Color.BLACK))
 
 
 def test_grid():
@@ -154,11 +154,11 @@ def test_grid():
     root.draw(ctx)
     
     assert(len(ctx._rects) == 5)
-    assert(ctx._rects[0] == (  0,  0, 320, 240, tk.Color.WHITE))
-    assert(ctx._rects[1] == (  0,  0, 150, 30, tk.Color.WHITE))
-    assert(ctx._rects[2] == (150,  0, 200, 30, tk.Color.WHITE))
-    assert(ctx._rects[3] == (  0, 30, 150, 40, tk.Color.WHITE))
-    assert(ctx._rects[4] == (150, 30, 200, 40, tk.Color.WHITE))
+    assert(ctx._rects[0] == (  0,  0, 320, 240, tk.Color.BLACK))
+    assert(ctx._rects[1] == (  0,  0, 150, 30, tk.Color.BLACK))
+    assert(ctx._rects[2] == (150,  0, 200, 30, tk.Color.BLACK))
+    assert(ctx._rects[3] == (  0, 30, 150, 40, tk.Color.BLACK))
+    assert(ctx._rects[4] == (150, 30, 200, 40, tk.Color.BLACK))
 
 def test_grid_nested():
     root = tk.Tk()
@@ -175,12 +175,12 @@ def test_grid_nested():
     root.draw(ctx)
     
     assert(len(ctx._rects) == 6)
-    assert(ctx._rects[0] == (  0,  0, 320, 240, tk.Color.WHITE))
-    assert(ctx._rects[1] == (1000, 2000, 350, 70, tk.Color.WHITE))
-    assert(ctx._rects[2] == (1000, 2000, 150, 30, tk.Color.WHITE))
-    assert(ctx._rects[3] == (1150, 2000, 200, 30, tk.Color.WHITE))
-    assert(ctx._rects[4] == (1000, 2030, 150, 40, tk.Color.WHITE))
-    assert(ctx._rects[5] == (1150, 2030, 200, 40, tk.Color.WHITE))
+    assert(ctx._rects[0] == (  0,  0, 320, 240, tk.Color.BLACK))
+    assert(ctx._rects[1] == (1000, 2000, 350, 70, tk.Color.BLACK))
+    assert(ctx._rects[2] == (1000, 2000, 150, 30, tk.Color.BLACK))
+    assert(ctx._rects[3] == (1150, 2000, 200, 30, tk.Color.BLACK))
+    assert(ctx._rects[4] == (1000, 2030, 150, 40, tk.Color.BLACK))
+    assert(ctx._rects[5] == (1150, 2030, 200, 40, tk.Color.BLACK))
 
 def test_weather_ui():
     fonts = [
@@ -219,5 +219,3 @@ def test_weather_ui():
 
     ctx = Context_Test()
     u_root.draw(ctx)
-    
-    assert(false)    

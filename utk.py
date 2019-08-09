@@ -27,8 +27,9 @@ class _Base:
         self.children = []
         if self.parent:
             self.parent.children.append(self)
+            self.parent._is_dirty = True
         
-        self._is_dirty = False
+        self._is_dirty = True
 
         self._x = 0
         self._y = 0
@@ -55,6 +56,8 @@ class _Base:
     # place geometry manager
     def place(self, **kwargs):
         self._config(self.PLACE_ATTRS, kwargs)
+        if self.parent:
+            self.parent._is_dirty = True
         return self
 
     # grid geometry manager
@@ -63,6 +66,7 @@ class _Base:
             return
         self._in_grid = self.parent
         self._is_dirty = True
+        self.parent._is_dirty = True
 
         try:
             rowa = self._in_grid._rows[row]
