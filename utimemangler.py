@@ -1,15 +1,14 @@
 """
-Time mangler -- ensure that we have the time set
+Time mangler  -- Network time functions
 
+* set the time from an NTP server
+* get a timezone offset from TimezoneDB server
 """
 
 import ulogging
 import utime
 import ntptime
-try:
-    import urequests as requests
-except ImportError:
-    import requests
+import urequests
 
 _logger = ulogging.getLogger('eng.sw.utime')
 _logger.setLevel(ulogging.INFO)
@@ -30,17 +29,18 @@ def get_tzone_data(apikey, tzone_name):
 #   headers['Accept-Encoding'] = 'gzip'
 
     try:
-        req = requests.get(url, headers=headers, timeout=30)
+        req = urequests.get(url, headers=headers, timeout=30)
     except (IndexError, OSError) as exc:  # IndexError is a strange exception to throw if there is no data...
         _logger.info('Requesting {}...failed'.format(url))
-        _logger.info(exc)
+        _logger.debug(exc.args[0])
         return None
 
     # Convert the forecast data from JSON to Python
     try:
         content = req.json()
-    except ValueError:
+    except ValueError as exc:
         req.close()
+        _logger.debug(exc.args[0])
         return None
 
     req.close()
@@ -60,20 +60,20 @@ class Time_Mangler:
     def __init__(self, net, tzone_name, tzone_apikey=None):
         self.net = net
         
-        self.retry_interval_initial = 2
-        self.retry_interval_not_set = 300  # 5 minutes
-        self.retry_interval_set = 3600 # 1 hour
-        self.timestamp = None
+        self.retry_interval_not_set_s = 300  # 5 minutes
+        self.retry_interval_set_s = 3600 # 1 hour
         self._confidence = 0.0
 
-        self.time_set_timestamp = None
-        self.next_set_timestamp = utime.time() + self.retry_interval_initial 
-        self.network_timeout = 30 # Keep the network up for 30 s maximum
+        time_now_ms = utime.ticks_ms()
+        self.next_attempt_timestamp_ms = time_now_ms + 2000
+        self.network_timeout_ms = 30000 # Keep the network up for 30 s maximum
 
         self.tzone_name = tzone_name
         self.tzone_apikey = tzone_apikey
         self.tzone_data = None
+        self.tzone_offset = None
 
+        self.state_timestamp_ms = None
         self.state = self.NOT_SET
 
     def confidence(self):
@@ -81,14 +81,16 @@ class Time_Mangler:
 
     def step(self):
         #pylint: disable=too-many-branches,too-many-statements
-        time_now = utime.time()
+        time_now_ms = utime.ticks_ms()
+        state_duration = utime.ticks_diff(time_now_ms, self.state_timestamp_ms)
 
         if self.state == self.NOT_SET:
-            if time_now > self.next_set_timestamp:
+            remaining_ms = utime.ticks_diff(self.next_attempt_timestamp_ms, time_now_ms)
+            if remaining_ms <= 0:
                 _logger.info('Time mangler...')
                 _logger.debug('Connecting...')
-                self.net.connect('timemangler', self.network_timeout)
-                self.timestamp = time_now
+                self.net.connect('timemangler', self.network_timeout_ms)
+                self.state_timestamp_ms = time_now_ms
                 self.state = self.CONNECTING
             return
 
@@ -96,38 +98,32 @@ class Time_Mangler:
             if self.net.is_connected():
                 _logger.debug('Connecting...done')
                 _logger.debug('Setting time...')
-                self.timestamp = time_now
+                self.state_timestamp_ms = time_now_ms
                 self.state = self.SETTING_TIME
             else:
-                duration = time_now - self.timestamp
-                if duration >= self.network_timeout:
+                if state_duration >= self.network_timeout_ms:
                     _logger.debug('Connecting...timeout')
                     _logger.debug('Disconnecting...')
-                    self.timestamp = time_now
+                    self.state_timestamp_ms = time_now_ms
                     self.state = self.DISCONNECTING
             return
 
         if self.state == self.SETTING_TIME:
             try:
                 ntptime.settime()
-                time_now = utime.time()   # Time has changed, so we must change our cached value
             except (OSError, IndexError):
                 _logger.info('Setting time...failed ({})', utime.localtime())
-                self.next_set_timestamp += self.retry_interval_set
-                if self.next_set_timestamp < time_now:  # If we have missed a timestamp, jump ahead
-                    self.next_set_timestamp = time_now + self.retry_interval_set
-                self.timestamp = time_now
+                self.next_attempt_timestamp_ms = utime.ticks_add(time_now_ms, self.retry_interval_set_s * 1000)
+                self.state_timestamp_ms = time_now_ms
                 self.state = self.DISCONNECTING
                 return
                 
             _logger.info('Setting time...done ({})', utime.localtime())
             self._confidence = 1.0
-            self.time_set_timestamp = time_now
-            self.next_set_timestamp += self.retry_interval_set
-            if self.next_set_timestamp < time_now:  # If we have missed a timestamp, jump ahead
-                self.next_set_timestamp = time_now + self.retry_interval_set
+            self.time_set_timestamp = time_now_ms
+            self.next_attempt_timestamp_ms = utime.ticks_add(time_now_ms, self.retry_interval_set_s * 1000)
             _logger.debug('Getting timezone...')
-            self.timestamp = time_now
+            self.state_timestamp_ms = time_now_ms
             self.state = self.WAITING_FOR_TIMEZONE
             return
 
@@ -137,13 +133,14 @@ class Time_Mangler:
             if self.tzone_data is None:
                 _logger.debug('Getting timezone...failed')
                 _logger.debug('Disconnecting...')
-                self.timestamp = time_now
+                self.state_timestamp_ms = time_now_ms
                 self.state = self.DISCONNECTING
             else:
+                self.tzone_offset = self.tzone_data['gmtOffset']
                 _logger.debug('Getting timezone...done')
                 _logger.info(self.tzone_data)
                 _logger.debug('Disconnecting...')
-                self.timestamp = time_now
+                self.state_timestamp_ms = time_now_ms
                 self.state = self.DISCONNECTING
             return
 
@@ -151,15 +148,15 @@ class Time_Mangler:
             self.net.disconnect('timemangler')
             _logger.debug('Disconnecting...done')
             _logger.info('Time mangler...done')
-            self.timestamp = time_now
+            self.state_timestamp_ms = time_now_ms
             self.state = self.TIME_SET
             return
 
         if self.state == self.TIME_SET:
-            if time_now > self.next_set_timestamp:
+            if time_now_ms > self.next_set_timestamp:
                 _logger.info('Time mangler...')
                 _logger.debug('Connecting...')
-                self.net.connect('timemangler', self.network_timeout)
-                self.timestamp = time_now
+                self.net.connect('timemangler', self.network_timeout_ms)
+                self.state_timestamp_ms = time_now_ms
                 self.state = self.CONNECTING
             return
