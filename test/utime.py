@@ -14,6 +14,9 @@ def ticks_us():
 def ticks_diff(t1, t2):
     return t1 - t2
 
+def ticks_add(t1, i1):
+    return t1 + i1
+
 def sleep_ms(duration_ms):
     global _ticks_us
     _ticks_us += duration_ms * 1000
