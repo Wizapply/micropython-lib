@@ -6,12 +6,12 @@ Given a list of network connection details, connect to one of them
 * connect to them in sequence
 """
 
-import ulogging
 import utime
 import network
 import sleepy
 
-_logger = ulogging.getLogger('eng.sw.unet')
+import ulogging
+_logger = ulogging.getLogger('eng.sw.unetmangler')
 _logger.setLevel(ulogging.INFO)
 
 
