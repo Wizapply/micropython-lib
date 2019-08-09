@@ -10,7 +10,7 @@ import utime
 import ntptime
 import urequests
 
-_logger = ulogging.getLogger('eng.sw.utime')
+_logger = ulogging.getLogger('eng.sw.utimemangler')
 _logger.setLevel(ulogging.INFO)
 
 
@@ -24,7 +24,7 @@ def get_tzone_data(apikey, tzone_name):
 
     url_fmt = 'http://api.timezonedb.com/v2.1/get-time-zone?{params}'
     url = url_fmt.format(params=params_str)
-    _logger.info('Requesting {}...'.format(url))
+    _logger.debug('Requesting {}...'.format(url))
     headers = {}
 #   headers['Accept-Encoding'] = 'gzip'
 
@@ -58,6 +58,7 @@ class Time_Mangler:
     TIME_SET = 5
 
     def __init__(self, net, tzone_name, tzone_apikey=None):
+        _logger.debug('__init__')
         self.net = net
         
         self.retry_interval_not_set_s = 300  # 5 minutes
@@ -65,7 +66,7 @@ class Time_Mangler:
         self._confidence = 0.0
 
         time_now_ms = utime.ticks_ms()
-        self.next_attempt_timestamp_ms = time_now_ms + 2000
+        self.next_attempt_timestamp_ms = utime.ticks_add(time_now_ms, 2000)
         self.network_timeout_ms = 30000 # Keep the network up for 30 s maximum
 
         self.tzone_name = tzone_name
@@ -111,14 +112,16 @@ class Time_Mangler:
         if self.state == self.SETTING_TIME:
             try:
                 ntptime.settime()
-            except (OSError, IndexError):
-                _logger.info('Setting time...failed ({})', utime.localtime())
+            except (OSError, IndexError) as exc:
+                _logger.debug(exc.args[0])
+                _logger.info('Setting time...failed')
                 self.next_attempt_timestamp_ms = utime.ticks_add(time_now_ms, self.retry_interval_set_s * 1000)
                 self.state_timestamp_ms = time_now_ms
                 self.state = self.DISCONNECTING
                 return
                 
-            _logger.info('Setting time...done ({})', utime.localtime())
+            _logger.debug('Setting time...done')
+            _logger.info('UTC: {}', utime.localtime())
             self._confidence = 1.0
             self.time_set_timestamp = time_now_ms
             self.next_attempt_timestamp_ms = utime.ticks_add(time_now_ms, self.retry_interval_set_s * 1000)
@@ -138,7 +141,7 @@ class Time_Mangler:
             else:
                 self.tzone_offset = self.tzone_data['gmtOffset']
                 _logger.debug('Getting timezone...done')
-                _logger.info(self.tzone_data)
+                _logger.info('TZ: {} {:+03d}'.format(self.tzone_data['abbreviation'], int(self.tzone_data['gmtOffset']/3600)))
                 _logger.debug('Disconnecting...')
                 self.state_timestamp_ms = time_now_ms
                 self.state = self.DISCONNECTING
@@ -153,7 +156,8 @@ class Time_Mangler:
             return
 
         if self.state == self.TIME_SET:
-            if time_now_ms > self.next_set_timestamp:
+            remaining_ms = utime.ticks_diff(self.next_attempt_timestamp_ms, time_now_ms)
+            if remaining_ms <= 0:
                 _logger.info('Time mangler...')
                 _logger.debug('Connecting...')
                 self.net.connect('timemangler', self.network_timeout_ms)
