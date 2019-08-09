@@ -78,7 +78,7 @@ class Net_Mangler:
     def step(self):
         #pylint: disable=too-many-branches,too-many-statements
         time_now = utime.ticks_ms()
-        duration = utime.ticks_diff(time_now, self.state_timestamp)
+        state_duration_ms = utime.ticks_diff(time_now, self.state_timestamp)
 
         # Remove expired users from the list
         for uid in list(self.users.keys()):
@@ -118,7 +118,7 @@ class Net_Mangler:
                 self.state = self.CONNECTED
                 return
 
-            if duration >= self.connect_timeout_ms:
+            if state_duration_ms >= self.connect_timeout_ms:
                 _logger.debug('{}: Connecting {}...timeout', self.name, self.wlan_ssid)
                 self.connection_attempt_config += 1
                 if self.connection_attempt_config >= len(self.configs):
@@ -151,7 +151,7 @@ class Net_Mangler:
             return
 
         if self.state == self.DISCONNECTING:
-            if status not in [ network.STAT_CONNECTING, network.STAT_GOT_IP ] or duration >= self.disconnect_timeout_ms:  #pylint: disable=line-too-long,bad-whitespace
+            if status not in [ network.STAT_CONNECTING, network.STAT_GOT_IP ] or state_duration_ms >= self.disconnect_timeout_ms:  #pylint: disable=line-too-long,bad-whitespace
                 self.netif.active(False)
                 sleepy.keep_awake(self.name, 0)
                 _logger.info('{}: Disconnecting {}...done', self.name, self.wlan_ssid)
