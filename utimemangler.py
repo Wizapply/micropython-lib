@@ -24,15 +24,15 @@ def get_tzone_data(apikey, tzone_name):
 
     url_fmt = 'http://api.timezonedb.com/v2.1/get-time-zone?{params}'
     url = url_fmt.format(params=params_str)
-    _logger.debug('Requesting {}...'.format(url))
+    _logger.debug('Requesting {}...', url)
     headers = {}
 #   headers['Accept-Encoding'] = 'gzip'
 
     try:
         req = urequests.get(url, headers=headers, timeout=30)
     except (IndexError, OSError) as exc:  # IndexError is a strange exception to throw if there is no data...
-        _logger.info('Requesting {}...failed'.format(url))
-        _logger.debug(exc.args[0])
+        _logger.info('Requesting {}...failed', url)
+        _logger.debug('{}', exc)
         return None
 
     # Convert the forecast data from JSON to Python
@@ -40,7 +40,7 @@ def get_tzone_data(apikey, tzone_name):
         content = req.json()
     except ValueError as exc:
         req.close()
-        _logger.debug(exc.args[0])
+        _logger.debug('{}', exc)
         return None
 
     req.close()
@@ -58,7 +58,6 @@ class Time_Mangler:
     TIME_SET = 5
 
     def __init__(self, net, tzone_name, tzone_apikey=None):
-        _logger.debug('__init__')
         self.net = net
         
         self.retry_interval_not_set_s = 300  # 5 minutes
@@ -113,7 +112,7 @@ class Time_Mangler:
             try:
                 ntptime.settime()
             except (OSError, IndexError) as exc:
-                _logger.debug(exc.args[0])
+                _logger.debug('{}', exc)
                 _logger.info('Setting time...failed')
                 self.next_attempt_timestamp_ms = utime.ticks_add(time_now_ms, self.retry_interval_set_s * 1000)
                 self.state_timestamp_ms = time_now_ms
@@ -141,7 +140,7 @@ class Time_Mangler:
             else:
                 self.tzone_offset = self.tzone_data['gmtOffset']
                 _logger.debug('Getting timezone...done')
-                _logger.info('TZ: {} {:+03d}'.format(self.tzone_data['abbreviation'], int(self.tzone_data['gmtOffset']/3600)))
+                _logger.info('TZ: {} {:+03d}', self.tzone_data['abbreviation'], int(self.tzone_data['gmtOffset']/3600))
                 _logger.debug('Disconnecting...')
                 self.state_timestamp_ms = time_now_ms
                 self.state = self.DISCONNECTING
