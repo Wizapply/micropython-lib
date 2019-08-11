@@ -83,21 +83,6 @@ class ILI9341:
         self.reset()
         self.init()
         self._buf = bytearray(_CHUNK * 2)
-        self._colormap = bytearray(b'\x00\x00\xFF\xFF') #default white foreground, black background
-        self._font = glcdfont
-    
-    def set_color(self, fg_color, bg_color):
-        fg = color565(fg_color)
-        bg = color565(bg_color)
-        self._colormap[0] = (bg >> 8) & 0xFF
-        self._colormap[1] = bg & 0xFF
-        self._colormap[2] = (fg >> 8) & 0xFF
-        self._colormap[3] = fg & 0xFF
-    
-    def font(self, font=None):
-        if (font):
-            self._font = font
-        return self._font
     
     def init(self):
         for command, data in (
@@ -173,15 +158,12 @@ class ILI9341:
             return
         self._writeblock(x, y, x, y, ustruct.pack(">H", color565(color)))
 
-    def fill_rect(self, x, y, w, h, color=None):
+    def fill_rect(self, x, y, w, h, color):
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
         h = min(self.height - y, max(1, h))
-        if color:
-            color = ustruct.pack(">H", color565(color))
-        else:
-            color = self._colormap[0:2] #background
+        color = ustruct.pack(">H", color565(color))
         for i in range(_CHUNK):
             self._buf[2*i]=color[0]; self._buf[2*i+1]=color[1]
         chunks, rest = divmod(w * h, _CHUNK)
@@ -193,8 +175,8 @@ class ILI9341:
             mv = memoryview(self._buf)
             self._data(mv[:rest*2])
 
-    def clear(self):
-        self.fill_rectangle(0, 0, self.width, self.height)
+    def clear(self, color):
+        self.fill_rectangle(0, 0, self.width, self.height, color)
     
     def circle(self, x, y, radius, fg_color=None, bg_color=None):
         self.fill_rectangle(x-radius, y-radius, radius*2, radius*2, fg_color)
