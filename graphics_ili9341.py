@@ -17,7 +17,7 @@ class Context:
     def text(self, x, y, width, height, text, font, fg, bg):
         x += self.xabs
         y += self.yabs
-        #print('text', x, y, width, height, text, str(font), fg, bg)
+        #print('text', x, y, width, height, "'"+text+"'", str(font), fg, bg)
         self.dev.text(text, x, y, fg, font.ff)
 
 

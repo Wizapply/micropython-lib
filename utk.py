@@ -242,9 +242,9 @@ class Label (_Base):
             top_offset = int(((self._height - self.pad_top - self.pad_bottom) - self.font.text_height(self.text)) / 2)
             left_offset = int(((self._width - self.pad_left - self.pad_right) - self.font.text_width(self.text)) / 2)
 
-#        print(self._width, self._height, self.pad_left, self.pad_right, self.pad_top, self.pad_bottom, "'"+self.text+"'", self.font, self.fg, self.bg)
-#        print(left_offset, top_offset)
-        context.rect(0, 0, self._width + self.pad_left + self.pad_right, self._height + self.pad_top + self.pad_bottom, self.bg)
+#         print(self._width, self._height, self.pad_left, self.pad_right, self.pad_top, self.pad_bottom, "'"+self.text+"'", self.font, self.fg, self.bg)
+#         print(left_offset, top_offset, self.font.text_width(self.text))
+        context.rect(0, 0, self._width, self._height, self.bg)
         context.text(left_offset + self.pad_left, top_offset + self.pad_top, self._width, self._height, self.text, self.font, self.fg, self.bg)
 
     def value(self, text=None):
