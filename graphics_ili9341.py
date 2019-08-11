@@ -27,29 +27,35 @@ class Font:
         self.ff = ff
 
     def text_size(self, text):
-        width = len(text) * self.ff.max_width()
+        width = self.ff.get_width(text)
         height = self.ff.height()
         return width, height
     
     def __str__(self):
         return '{}'.format(self.name)
 
-fonts = {}
+_fonts = {}
 
 try:
-    import glcdfont
-    fonts['small'] = Font('glcd', glcdfont)
+    import fonts.DejaVuSans_12
+    _fonts['small'] = Font('DejaVuSans_12', fonts.DejaVuSans_12)
 except ImportError:
     pass
 
 try:
-    import tt14
-    fonts['normal'] = Font('tt14', tt14)
+    import fonts.DejaVuSans_16
+    _fonts['medium'] = Font('DejaVuSans_16', fonts.DejaVuSans_16)
 except ImportError:
     pass
 
 try:
-    import tt24
-    fonts['large'] = Font('tt24', tt24)
+    import fonts.DejaVuSans_Bold_16
+    _fonts['medium-bold'] = Font('DejaVuSansBold_16', fonts.DejaVuSans_Bold_16)
+except ImportError:
+    pass
+
+try:
+    import fonts.DejaVuSans_20
+    _fonts['large'] = Font('DejaVuSans_20', fonts.DejaVuSans_20)
 except ImportError:
     pass
