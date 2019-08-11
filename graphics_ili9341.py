@@ -26,10 +26,11 @@ class Font:
         self.name = name
         self.ff = ff
 
-    def text_size(self, text):
-        width = self.ff.get_width(text)
-        height = self.ff.height()
-        return width, height
+    def text_width(self, text):
+        return self.ff.get_width(text)
+    
+    def text_height(self, text):
+        return self.ff.height()
     
     def __str__(self):
         return '{}'.format(self.name)
@@ -50,12 +51,18 @@ except ImportError:
 
 try:
     import fonts.DejaVuSans_Bold_16
-    _fonts['medium-bold'] = Font('DejaVuSansBold_16', fonts.DejaVuSans_Bold_16)
+    _fonts['medium-bold'] = Font('DejaVuSans_Bold_16', fonts.DejaVuSans_Bold_16)
 except ImportError:
     pass
 
 try:
     import fonts.DejaVuSans_20
     _fonts['large'] = Font('DejaVuSans_20', fonts.DejaVuSans_20)
+except ImportError:
+    pass
+
+try:
+    import fonts.DejaVuSans_Bold_20
+    _fonts['large-bold'] = Font('DejaVuSans_Bold_20', fonts.DejaVuSans_Bold_20)
 except ImportError:
     pass

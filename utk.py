@@ -195,6 +195,7 @@ class Label (_Base):
         'pad_right': 4,
         'pad_top': 4,
         'pad_bottom': 4,
+        'anchor': 'w',
         'font': None,
     }
 
@@ -205,20 +206,52 @@ class Label (_Base):
     def _calculate(self):
         super()._calculate()
         if self.font:
-            text_width, text_height = self.font.text_size(self.text)
+            text_width = self.font.text_width(self.text)
+            text_height = self.font.text_height(self.text)
             if self.width is None:
                 self._width = max(self._width, text_width + self.pad_left + self.pad_right)
             if self.height is None:
                 self._height = max(self._height, text_height + self.pad_top + self.pad_bottom)
 
     def _paint(self, context):
+        if self.anchor == 'n':
+            top_offset = 0
+            left_offset = int(((self._width - self.pad_left - self.pad_right) - self.font.text_width(self.text)) / 2)
+        elif self.anchor == 'ne':
+            top_offset = 0
+            left_offset = ((self._width - self.pad_left - self.pad_right) - self.font.text_width(self.text))
+        elif self.anchor == 'e':
+            top_offset = int(((self._height - self.pad_top - self.pad_bottom) - self.font.text_height(self.text)) / 2)
+            left_offset = ((self._width - self.pad_left - self.pad_right) - self.font.text_width(self.text))
+        elif self.anchor == 'se':
+            top_offset = ((self._height - self.pad_top - self.pad_bottom) - self.font.text_height(self.text))
+            left_offset = int(((self._width - self.pad_left - self.pad_right) - self.font.text_width(self.text)) / 2)
+        elif self.anchor == 's':
+            top_offset = ((self._height - self.pad_top - self.pad_bottom) - self.font.text_height(self.text))
+            left_offset = int(((self._width - self.pad_left - self.pad_right) - self.font.text_width(self.text)) / 2)
+        elif self.anchor == 'sw':
+            top_offset = ((self._height - self.pad_top - self.pad_bottom) - self.font.text_height(self.text))
+            left_offset = 0
+        elif self.anchor == 'w':
+            top_offset = int(((self._height - self.pad_top - self.pad_bottom) - self.font.text_height(self.text)) / 2)
+            left_offset = 0
+        elif self.anchor == 'nw':
+            top_offset = 0
+            left_offset = 0
+        else:
+            top_offset = int(((self._height - self.pad_top - self.pad_bottom) - self.font.text_height(self.text)) / 2)
+            left_offset = int(((self._width - self.pad_left - self.pad_right) - self.font.text_width(self.text)) / 2)
+
+#        print(self._width, self._height, self.pad_left, self.pad_right, self.pad_top, self.pad_bottom, "'"+self.text+"'", self.font, self.fg, self.bg)
+#        print(left_offset, top_offset)
         context.rect(0, 0, self._width + self.pad_left + self.pad_right, self._height + self.pad_top + self.pad_bottom, self.bg)
-        context.text(0 + self.pad_left, 0 + self.pad_top, self._width, self._height, self.text, self.font, self.fg, self.bg)
+        context.text(left_offset + self.pad_left, top_offset + self.pad_top, self._width, self._height, self.text, self.font, self.fg, self.bg)
 
     def value(self, text=None):
         if text:
-            self.text = text
-            self._is_dirty = True
+            if self.text != text:
+                self.text = text
+                self._is_dirty = True
         return self.text
 
 
