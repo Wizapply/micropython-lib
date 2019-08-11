@@ -72,6 +72,7 @@ class Time_Mangler:
         self.tzone_apikey = tzone_apikey
         self.tzone_data = None
         self.tzone_offset = None
+        self.tzone_abbr = 'UTC'
 
         self.state_timestamp_ms = None
         self.state = self.NOT_SET
@@ -139,6 +140,7 @@ class Time_Mangler:
                 self.state = self.DISCONNECTING
             else:
                 self.tzone_offset = self.tzone_data['gmtOffset']
+                self.tzone_abbr = self.tzone_data['abbreviation']
                 _logger.debug('Getting timezone...done')
                 _logger.info('TZ: {} {:+03d}', self.tzone_data['abbreviation'], int(self.tzone_data['gmtOffset']/3600))
                 _logger.debug('Disconnecting...')
