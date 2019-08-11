@@ -58,6 +58,16 @@ def color565(r, g=None, b=None):
         b = (color) & 0xFF
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | (b & 0xf8) >> 3
 
+def colormap(fg_color, bg_color):
+    fg = color565(fg_color)
+    bg = color565(bg_color)
+    _colormap = bytearray(b'\x00\x00\x00\x00')
+    _colormap[0] = (bg >> 8) & 0xFF
+    _colormap[1] = bg & 0xFF
+    _colormap[2] = (fg >> 8) & 0xFF
+    _colormap[3] = fg & 0xFF
+    return _colormap
+    
 
 class ILI9341:
     def __init__(self, width, height, spi, cs, dc, rst):
@@ -189,7 +199,7 @@ class ILI9341:
     def circle(self, x, y, radius, fg_color=None, bg_color=None):
         self.fill_rectangle(x-radius, y-radius, radius*2, radius*2, fg_color)
         
-    def blit(self, bitbuff, x, y, w, h):
+    def blit(self, bitbuff, x, y, w, h, colormap):
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
@@ -205,8 +215,8 @@ class ILI9341:
                     written += _CHUNK
                     index   -= _CHUNK
                 c = bitbuff.pixel(ix,iy)
-                self._buf[index*2] = self._colormap[c*2]
-                self._buf[index*2+1] = self._colormap[c*2+1]
+                self._buf[index*2] = colormap[c*2]
+                self._buf[index*2+1] = colormap[c*2+1]
         rest = w*h - written
         if rest != 0:
             mv = memoryview(self._buf)
@@ -215,8 +225,7 @@ class ILI9341:
     def line(self, x0, y, x1, y1, color=None):
         pass
 
-    def text(self, text, x, y, color=None, font=None):
-        font = font or self._font
+    def text(self, text, x, y, font, fg, bg):
         text_w  = font.get_width(text)
         div, rem = divmod(font.height(),8)
         nbytes = div+1 if rem else div
@@ -230,7 +239,7 @@ class ILI9341:
                     buf[index+i] = glyph[nbytes*i+row]
             pos += char_w
         fb = framebuf.FrameBuffer(buf, text_w, font.height(), framebuf.MONO_VLSB)
-        self.blit(fb, x, y, text_w, font.height())
+        self.blit(fb, x, y, text_w, font.height(), colormap(fg, bg) )
         return x + text_w
 
     def show(self):

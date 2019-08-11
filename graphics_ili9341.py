@@ -11,14 +11,14 @@ class Context:
     def rect(self, x, y, width, height, color):
         x += self.xabs
         y += self.yabs
-        #print('rect', x, y, width, height, color)
+#        print('rect', x, y, width, height, color)
         self.dev.fill_rect(x, y, width, height, color)
 
     def text(self, x, y, width, height, text, font, fg, bg):
         x += self.xabs
         y += self.yabs
-        #print('text', x, y, width, height, "'"+text+"'", str(font), fg, bg)
-        self.dev.text(text, x, y, fg, font.ff)
+#        print('text', x, y, width, height, "'"+text+"'", str(font), fg, bg)
+        self.dev.text(text, x, y, font.ff, fg, bg)
 
 
 class Font:
