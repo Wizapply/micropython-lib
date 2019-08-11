@@ -191,6 +191,10 @@ class Label (_Base):
         'height': None,
         'fg': Color.WHITE,
         'bg': Color.BLACK,
+        'pad_left': 4,
+        'pad_right': 4,
+        'pad_top': 4,
+        'pad_bottom': 4,
         'font': None,
     }
 
@@ -203,13 +207,13 @@ class Label (_Base):
         if self.font:
             text_width, text_height = self.font.text_size(self.text)
             if self.width is None:
-                self._width = max(self._width, text_width)
+                self._width = max(self._width, text_width + self.pad_left + self.pad_right)
             if self.height is None:
-                self._height = max(self._height, text_height)
+                self._height = max(self._height, text_height + self.pad_top + self.pad_bottom)
 
     def _paint(self, context):
-        context.rect(0, 0, self._width, self._height, self.bg)
-        context.text(0, 0, self._width, self._height, self.text, self.font, self.fg, self.bg)
+        context.rect(0, 0, self._width + self.pad_left + self.pad_right, self._height + self.pad_top + self.pad_bottom, self.bg)
+        context.text(0 + self.pad_left, 0 + self.pad_top, self._width, self._height, self.text, self.font, self.fg, self.bg)
 
     def value(self, text=None):
         if text:
