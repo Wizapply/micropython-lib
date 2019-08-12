@@ -1,8 +1,20 @@
 class Color:
-    BLACK = 0x000000
-    RED   = 0xFF0000
-    GREEN = 0x008000
-    WHITE = 0xFFFFFF
+    BLACK   = 0x000000
+    NAVY    = 0x000080
+    BLUE    = 0x0000FF
+    GREEN   = 0x008000
+    TEAL    = 0x008080
+    LIME    = 0x00FF00
+    AQUA    = 0x00FFFF
+    MAROON  = 0x800000
+    PURPLE  = 0x800080
+    OLIVE   = 0x808000
+    GRAY    = 0x808080
+    SILVER  = 0xC0C0C0
+    RED     = 0xFF0000
+    FUSCHIA = 0xFF00FF
+    YELLOW  = 0xFFFF00
+    WHITE   = 0xFFFFFF
 
 
 class _Base:
