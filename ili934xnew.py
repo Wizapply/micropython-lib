@@ -13,6 +13,8 @@
 # Project home:
 #   https://github.com/tuupola/micropython-ili934x
 
+import utimeit
+
 import time
 import ustruct
 import glcdfont
@@ -58,10 +60,10 @@ def color565(r, g=None, b=None):
         b = (color) & 0xFF
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | (b & 0xf8) >> 3
 
-def colormap(fg_color, bg_color):
-    fg = color565(fg_color)
+def colormap(bg_color, fg_color):
     bg = color565(bg_color)
-    _colormap = bytearray(b'\x00\x00\x00\x00')
+    fg = color565(fg_color)
+    _colormap = bytearray(4)
     _colormap[0] = (bg >> 8) & 0xFF
     _colormap[1] = bg & 0xFF
     _colormap[2] = (fg >> 8) & 0xFF
@@ -158,14 +160,16 @@ class ILI9341:
             return
         self._writeblock(x, y, x, y, ustruct.pack(">H", color565(color)))
 
+    @utimeit.timeit        
     def fill_rect(self, x, y, w, h, color):
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
         h = min(self.height - y, max(1, h))
-        color = ustruct.pack(">H", color565(color))
-        for i in range(_CHUNK):
-            self._buf[2*i]=color[0]; self._buf[2*i+1]=color[1]
+        color0, color1 = ustruct.pack(">H", color565(color))
+        for i in range(0, _CHUNK*2, 2):
+            self._buf[i]=color0
+            self._buf[i+1]=color1
         chunks, rest = divmod(w * h, _CHUNK)
         self._writeblock(x, y, x + w - 1, y + h - 1, None)
         if chunks:
@@ -180,25 +184,35 @@ class ILI9341:
     
     def circle(self, x, y, radius, fg_color=None, bg_color=None):
         self.fill_rectangle(x-radius, y-radius, radius*2, radius*2, fg_color)
-        
-    def blit(self, bitbuff, x, y, w, h, colormap):
+
+    @utimeit.timeit        
+    def blit_fbmono(self, bitbuff, x, y, w, h, bg, fg):
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
         h = min(self.height - y, max(1, h))
+        color0, color1 = ustruct.pack(">H", color565(bg))
+        color2, color3 = ustruct.pack(">H", color565(fg))
+
         chunks, rest = divmod(w * h, _CHUNK)
         self._writeblock(x, y, x + w - 1, y + h - 1, None)
         written = 0
+        index = 0
         for iy in range(h):
             for ix in range(w):
-                index = ix+iy*w - written
-                if index >=_CHUNK:
+                index += 2
+                if index >=_CHUNK*2:
                     self._data(self._buf)
                     written += _CHUNK
-                    index   -= _CHUNK
+                    index   -= _CHUNK*2
                 c = bitbuff.pixel(ix,iy)
-                self._buf[index*2] = colormap[c*2]
-                self._buf[index*2+1] = colormap[c*2+1]
+                if not c:
+                    self._buf[index] = color0
+                    self._buf[index+1] = color1
+                else:
+                    self._buf[index] = color2
+                    self._buf[index+1] = color3
+
         rest = w*h - written
         if rest != 0:
             mv = memoryview(self._buf)
@@ -221,7 +235,7 @@ class ILI9341:
                     buf[index+i] = glyph[nbytes*i+row]
             pos += char_w
         fb = framebuf.FrameBuffer(buf, text_w, font.height(), framebuf.MONO_VLSB)
-        self.blit(fb, x, y, text_w, font.height(), colormap(fg, bg) )
+        self.blit_fbmono(fb, x, y, text_w, font.height(), bg, fg)
         return x + text_w
 
     def show(self):
