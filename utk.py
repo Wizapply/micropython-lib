@@ -1,3 +1,5 @@
+import utimeit
+
 class Color:
     BLACK   = 0x000000
     NAVY    = 0x000080
@@ -15,6 +17,88 @@ class Color:
     FUSCHIA = 0xFF00FF
     YELLOW  = 0xFFFF00
     WHITE   = 0xFFFFFF
+
+    CYAN    = 0x00FFFF
+    MAGENTA = 0xFF00FF
+
+
+    @staticmethod
+    def from_rgb(r, g, b):
+        return Color.from_rgb_hex(r, g, b)
+
+    @staticmethod
+    def from_rgb_hex(r, g, b):
+        return ((r & 0xFF) << 16) + ((g & 0xFF) << 8) + (b & 0xFF)
+
+    @staticmethod
+    def from_rgb_fraction(r, g, b):
+        return Color.from_rgb(int(round(r*255)), int(round(g*255)), int(round(b*255)))
+
+    @staticmethod
+    def from_hsl(h, s, l):
+        """
+        Convert (hue, saturation, lightness) triplet to RGB
+
+        References
+            https://www.w3.org/TR/css-color-3/
+            http://www.niwa.nu/2013/05/math-behind-colorspace-conversions-rgb-hsl/
+            https://serennu.com/colour/rgbtohsl.php
+        """
+        if l <= 0.5:
+            m2 = l*(s + 1.)
+        else:
+            m2 = l + s - l*s
+        m1 = l * 2. - m2
+        r = Color._hue_to_rgb(m1, m2, h+1./3.)
+        g = Color._hue_to_rgb(m1, m2, h)
+        b = Color._hue_to_rgb(m1, m2, h-1./3.)
+        return Color.rgb_fraction(r, g, b)
+
+    @staticmethod
+    def _hue_to_rgb(m1, m2, h):
+        if h < 0.:
+            h = h + 1.
+        if h > 1.:
+            h = h - 1.
+        if h*6. < 1.:
+            return m1 + (m2-m1)*h*6.
+        elif h*2. < 1.:
+            return m2
+        elif h*3. < 2.:
+            return m1 + (m2-m1)*(2./3.-h)*6.
+        else:
+            return m1
+
+    @staticmethod
+    def hsl_from_color(color):
+        r, g, b = Color.to_rgb_fraction(color)
+        rgb_min = min(r, g, b)
+        rgb_max = max(r, g, b)
+        l = (rgb_min + rgb_max) / 2.
+        if l <= 0.5:
+            s = (rgb_max - rgb_min) / (rgb_max + rgb_min)
+        else:
+            s = (rgb_max - rgb_min) / (2. - rgb_max - rgb_min)
+        if r > g and r > b:   # Red is the biggest component
+            h = (g - b) / (rgb_max - rgb_min)
+        elif g > r and g > b:   # Green is the biggest component
+            h = 2. + (b - r) / (rgb_max - rgb_min)
+        else:  # Assume that Blue is the biggest component
+            h = 4. + (r - g) / (rgb_max - rgb_min)
+
+        return h, s, l
+
+    @staticmethod
+    def to_rgb_hex(color):
+        r = ((color >> 16) & 0xFF)
+        g = ((color >> 8) & 0xFF)
+        b = ((color) & 0xFF)
+        return r, g, b
+        
+    @staticmethod
+    def to_rgb_fraction(color):
+        r, g, b = Color.to_rgb_hex(color)
+        return r / 255., g / 255., b / 255.        
 
 
 class _Base:
@@ -225,6 +309,7 @@ class Label (_Base):
             if self.height is None:
                 self._height = max(self._height, text_height + self.pad_top + self.pad_bottom)
 
+    @utimeit.timeit
     def _paint(self, context):
         if self.anchor == 'n':
             top_offset = 0
@@ -267,12 +352,96 @@ class Label (_Base):
         return self.text
 
 
-# TODO: Colours
-# TODO: Sparkline widget
-# TODO: Borders and margins around widgets
+class Sparkline (_Base):
+    CONFIG_ATTRS = {
+        'x': 0,
+        'y': 0,
+        'width': None,
+        'height': None,
+        'fg': Color.WHITE,
+        'bg': Color.BLACK,
+        'pad_left': 4,
+        'pad_right': 4,
+        'pad_top': 4,
+        'pad_bottom': 4,
+        'max_values': 64,
+        'vrange_min': 10,
+        'highlight': Color.RED,
+    }
+
+    def __init__(self, parent):  #pylint: disable=super-init-not-called
+        super().__init__(parent)
+        if self.highlight is None:
+            self.highlight = self.style.fg
+
+        if self.max_values is None and self.width is not None:
+            self.max_values = (self.width - (self.pad_left + self.pad_right))  #pylint: disable=no-member
+        self.value = [ None for i in range(self.max_values) ]
+
+    @utimeit.timeit
+    def _paint(self, context):
+        values = [ v for v in self.value if v is not None ]  #pylint: disable=bad-whitespace
+        if not values:
+            return
+
+        vmin = min(values)
+        vmax = max(values)
+        vrange = vmax - vmin
+        if vrange < self.vrange_min:
+            vofs = round((self.vrange_min - vrange) / 2)
+            vmin = vmin - vofs
+            vrange = self.vrange_min
+
+        yrange = self._height - (self.pad_top + self.pad_bottom)
+        scale = yrange / vrange
+
+        context.rect(0, 0, self._width, self._height, self.bg)
+
+        #pylint: disable=invalid-name
+        x0 = self.pad_left
+        y0 = None
+        for v in self.value:
+            x1 = x0 + 1
+            if v is None:
+                y1 = None
+            else:
+                y1 = -round((v - vmin) * scale) + self._height - self.pad_bottom
+
+            if y0 is None:
+                if y1 is None: # Both are none
+                    pass
+                else:  # y1 not none
+                    context.pixel(x1, y1, self.fg)
+            else:  # y0 not none
+                if y1 is None:
+                    context.pixel(x0, y0, self.fg)
+                else:  # Both not none
+                    context.line(x0, y0, x1, y1, self.fg)
+
+            x0 = x1
+            y0 = y1
+
+        # Draw a slightly larger 'dot' at the RH end of the line
+        if y0 is not None:
+            context.pixel(x0, y0, self.highlight)
+            context.pixel(x0-1, y0, self.highlight)
+            context.pixel(x0+1, y0, self.highlight)
+            context.pixel(x0, y0-1, self.highlight)
+            context.pixel(x0, y0+1, self.highlight)
+
+    
+    def append_value(self, value):
+        if type(value) is list:
+            self.value.extend(value)
+        else:
+            self.value.append(value)
+        while len(self.value) > self.max_values:
+            self.value.pop(0)
+        self._is_dirty = True
+
+
+
 # TODO: Styles (standard collections of fonts, colour, borders, etc)
 # TODO: Graphics context drivers for each display controller
 # TODO: Graphics context driver for BMP, PNG etc
-# TODO: Calculate sizes and positions when items are added or moved rather than every time they are drawn
-# TODO: Dirty flag to prevent unnecessary recalculations and/or redraws
 # TODO: Make grid geometry manager 'optional' to reduce memory footprint if it is not used

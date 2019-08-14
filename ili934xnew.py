@@ -13,8 +13,6 @@
 # Project home:
 #   https://github.com/tuupola/micropython-ili934x
 
-import utimeit
-
 import time
 import ustruct
 import glcdfont
@@ -52,13 +50,17 @@ _NGAMCTRL = const(0xe1) # Negative Gamma Control
 _CHUNK = const(1024) #maximum number of pixels per spi write
 
 
-def color565(r, g=None, b=None):
+def color565s(r, g=None, b=None):
     if not g and not b:
         color = r
         r = (color >> 16) & 0xFF
         g = (color >> 8) & 0xFF
         b = (color) & 0xFF
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | (b & 0xf8) >> 3
+
+def color565(r, g=None, b=None):
+    c = color565s(r, g, b)
+    return ((c & 0xFF) << 8) | ((c >> 8) & 0xFF)
 
 def colormap(bg_color, fg_color):
     bg = color565(bg_color)
@@ -85,6 +87,7 @@ class ILI9341:
         self.reset()
         self.init()
         self._buf = bytearray(_CHUNK * 2)
+        self._fb = framebuf.FrameBuffer(self._buf, _CHUNK, 1, framebuf.RGB565)
     
     def init(self):
         for command, data in (
@@ -158,18 +161,19 @@ class ILI9341:
             return color565(r, g, b)
         if not 0 <= x < self.width or not 0 <= y < self.height:
             return
-        self._writeblock(x, y, x, y, ustruct.pack(">H", color565(color)))
+        self._writeblock(x, y, x, y, ustruct.pack("<H", color565(color)))
 
-    @utimeit.timeit        
+    def line(self, x0, y0, x1, y1, color):
+        self.pixel(x0, y0, color)
+        self.pixel(x1, y1, color)
+
     def fill_rect(self, x, y, w, h, color):
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
         h = min(self.height - y, max(1, h))
-        color0, color1 = ustruct.pack(">H", color565(color))
-        for i in range(0, _CHUNK*2, 2):
-            self._buf[i]=color0
-            self._buf[i+1]=color1
+        self._fb.fill(color565(color))
+
         chunks, rest = divmod(w * h, _CHUNK)
         self._writeblock(x, y, x + w - 1, y + h - 1, None)
         if chunks:
@@ -185,14 +189,13 @@ class ILI9341:
     def circle(self, x, y, radius, fg_color=None, bg_color=None):
         self.fill_rectangle(x-radius, y-radius, radius*2, radius*2, fg_color)
 
-    @utimeit.timeit        
     def blit_fbmono(self, bitbuff, x, y, w, h, bg, fg):
         x = min(self.width - 1, max(0, x))
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
         h = min(self.height - y, max(1, h))
-        color0, color1 = ustruct.pack(">H", color565(bg))
-        color2, color3 = ustruct.pack(">H", color565(fg))
+        colorbg = ustruct.pack("<H", color565(bg))
+        colorfg = ustruct.pack("<H", color565(fg))
 
         chunks, rest = divmod(w * h, _CHUNK)
         self._writeblock(x, y, x + w - 1, y + h - 1, None)
@@ -200,27 +203,24 @@ class ILI9341:
         index = 0
         for iy in range(h):
             for ix in range(w):
-                index += 2
-                if index >=_CHUNK*2:
+                index += 1
+                if index >=_CHUNK:
                     self._data(self._buf)
                     written += _CHUNK
-                    index   -= _CHUNK*2
+                    index   -= _CHUNK
                 c = bitbuff.pixel(ix,iy)
                 if not c:
-                    self._buf[index] = color0
-                    self._buf[index+1] = color1
+                    self._buf[index*2] = colorbg[0]
+                    self._buf[index*2+1] = colorbg[1]
                 else:
-                    self._buf[index] = color2
-                    self._buf[index+1] = color3
+                    self._buf[index*2] = colorfg[0]
+                    self._buf[index*2+1] = colorfg[1]
 
         rest = w*h - written
         if rest != 0:
             mv = memoryview(self._buf)
             self._data(mv[:rest*2])
     
-    def line(self, x0, y, x1, y1, color=None):
-        pass
-
     def text(self, text, x, y, font, fg, bg):
         text_w  = font.get_width(text)
         div, rem = divmod(font.height(),8)
@@ -240,3 +240,8 @@ class ILI9341:
 
     def show(self):
         pass
+
+
+# TODO: Proper Bresenham line algorithm
+# TODO: Support for fonts with UTF8 characters
+# TODO: Speedup, especially text drawing

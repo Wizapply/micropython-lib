@@ -8,6 +8,20 @@ class Context:
         self.width = width
         self.height = height
         
+    def pixel(self, x, y, color):
+        x += self.xabs
+        y += self.yabs
+#        print('pixel', x, y, color)
+        self.dev.pixel(x, y, color)
+
+    def line(self, x0, y0, x1, y1, color):
+        x0 += self.xabs
+        y0 += self.yabs
+        x1 += self.xabs
+        y1 += self.yabs
+        #print('line', x0, y0, x1, y1, color)
+        self.dev.line(x0, y0, x1, y1, color)
+
     def rect(self, x, y, width, height, color):
         x += self.xabs
         y += self.yabs
