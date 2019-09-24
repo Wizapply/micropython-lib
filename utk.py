@@ -309,7 +309,7 @@ class Label (_Base):
             if self.height is None:
                 self._height = max(self._height, text_height + self.pad_top + self.pad_bottom)
 
-    @utimeit.timeit
+    #@utimeit.timeit
     def _paint(self, context):
         if self.anchor == 'n':
             top_offset = 0
