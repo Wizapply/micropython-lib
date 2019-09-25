@@ -345,7 +345,7 @@ class Label (_Base):
         context.text(left_offset + self.pad_left, top_offset + self.pad_top, self._width, self._height, self.text, self.font, self.fg, self.bg)
 
     def value(self, text=None):
-        if text:
+        if text is not None:
             if self.text != text:
                 self.text = text
                 self._is_dirty = True
