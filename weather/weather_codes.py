@@ -10,6 +10,7 @@ _codes = (
     ( 230, 'Thunderstorm', 'Thunderstorm with light drizzle', '11d' ),
     ( 231, 'Thunderstorm', 'Thunderstorm with drizzle', '11d' ),
     ( 232, 'Thunderstorm', 'Thunderstorm with heavy drizzle', '11d' ),
+    ( 233, 'Thunderstorm', 'Thunderstorm with hail', None ),
 
     ( 300, 'Drizzle', 'Light intensity drizzle', '09d' ),
     ( 301, 'Drizzle', 'Drizzle', '09d' ),
@@ -35,20 +36,25 @@ _codes = (
     ( 600, 'Snow', 'Light snow', '3d' ),
     ( 601, 'Snow', 'Snow', '13d' ),
     ( 602, 'Snow', 'Heavy snow', '13d' ),
+    ( 610, 'Snow', 'Mix snow/rain', None ),
     ( 611, 'Snow', 'Sleet', '13d' ),
     ( 612, 'Snow', 'Light shower sleet', '13d' ),
+#612     Heavy sleet     Weather API Day Sleets05d, Weather API Night Sleets05n
     ( 613, 'Snow', 'Shower sleet', '13d' ),
     ( 615, 'Snow', 'Light rain and snow', '13d' ),
     ( 616, 'Snow', 'Rain and snow', '13d' ),
     ( 620, 'Snow', 'Light shower snow', '13d' ),
     ( 621, 'Snow', 'Shower snow', '13d' ),
     ( 622, 'Snow', 'Heavy shower snow', '13d' ),
+#623     Flurries     Weather API Day Flurriess06d, Weather API Night Flurriess06n
 
+#700     Mist     Weather API Day Mista01d, Weather API Night Mista01n
     ( 701, 'Mist', 'Mist', '50d' ),
     ( 711, 'Smoke', 'Smoke', '50d' ),
     ( 721, 'Haze', 'Haze', '50d' ),
     ( 731, 'Dust', 'Sand/dust whirl', '50d' ),
     ( 741, 'Fog', 'Fog', '50d' ),
+#751     Freezing Fog     Weather API Day Freezing foga06d, Weather API Night freezing foga06n
     ( 751, 'Sand', 'Sand', '50d' ),
     ( 761, 'Dust', 'Dust', '50d' ),
     ( 762, 'Ash', 'Volcanic ash', '50d' ),
@@ -61,7 +67,10 @@ _codes = (
     ( 802, 'Clouds', 'Scattered clouds: 25-50%', '03d 03n' ),
     ( 803, 'Clouds', 'Broken clouds: 51-84%', '04d 04n' ),
     ( 804, 'Clouds', 'Overcast clouds: 85-100%', '04d 04n' ),
+
+#900     Unknown Precipitation     Weather API Day Unknown Precipitationu00d, Weather API Night Unknown Precipitationu00n
 )
+
 
 """
 Darksky icons
