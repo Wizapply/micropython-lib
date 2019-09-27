@@ -46,6 +46,27 @@ def get_tzone_data(apikey, tzone_name):
     req.close()
     return content
 
+"""
+@startuml
+[*] --> Not_set
+Not_set --> Connecting
+Connecting --> Requesting : Connected
+Waiting_for_time --> Waiting_for_timezone : Time_received(time)
+Waiting_for_timezone --> Time_set : Timezone_received(timezone)
+Time_set --> Connecting : Resync
+Time_set --> Time_set : Timeout
+
+Connecting : generate 'Connect' to network
+
+Waiting_for_time : start_timer(time_request_duration)
+Waiting_for_time : send_request(time_URL)
+
+Waiting_for_timezone : set_clock(time)
+Waiting_for_timezone : start_timer(timezone_request_duration)
+Waiting_for_timezone : send_request(timezone_URL)
+
+@enduml
+"""
 
 class Time_Mangler:
     #pylint: disable=too-many-instance-attributes
