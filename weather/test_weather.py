@@ -36,34 +36,34 @@ try:
 except ImportError:
     import time as utime
 
-import weatherbit_io
-import darksky_net
+
+import weatherbit_io as weatherbit_io
 
 weatherbit_io_files = [
-    'test/weatherbit.io-currently.json',
-    'test/weatherbit.io-hourly-6h.json',
-    'test/weatherbit.io-daily-5d.json',
+    '../test/data/weatherbit.io-currently.json',
+    '../test/data/weatherbit.io-hourly-6h.json',
+    '../test/data/weatherbit.io-daily-5d.json',
 ]
 
 for filename in weatherbit_io_files:
     with open(filename) as f:
-        data_json = f.read()
+        data_json = f
         obss = weatherbit_io.process_json(data_json)
 #        for obs in obss:
 #            print(obs)
 #            print()
 
 # Get the data
-with open('test/weatherbit.io-currently.json') as f:
-    data_json = f.read()
+with open('../test/data/weatherbit.io-currently.json') as f:
+    data_json = f
     current = weatherbit_io.process_json(data_json)[0]
 
-with open('test/weatherbit.io-hourly-6h.json') as f:
-    data_json = f.read()
+with open('../test/data/weatherbit.io-hourly-6h.json') as f:
+    data_json = f
     hourly = weatherbit_io.process_json(data_json)
 
-with open('test/weatherbit.io-daily-5d.json') as f:
-    data_json = f.read()
+with open('../test/data/weatherbit.io-daily-5d.json') as f:
+    data_json = f
     daily = weatherbit_io.process_json(data_json)
 
 
@@ -76,6 +76,7 @@ print('Christchurch - weatherbit.io')
 
 o = current
 tt = utime.localtime(o.time_ts)
+print(tt)
 print(c_fmt.format(hour=tt[3], minute=tt[4], temperature=o.temperature_C, rain=o.precipitation_mm, summary=o.summary))
 print()
 
@@ -91,35 +92,41 @@ print()
 
 print()
 
+
+import darksky_net as darksky_net
+
 darksky_net_files = [
-    'test/darksky.net-currently.json',
-    'test/darksky.net-hourly.json',
-    'test/darksky.net-daily.json',
+    '../test/data/darksky.net-currently.json',
+#    '../test/data/darksky.net-hourly.json',
+    '../test/data/darksky.net-daily.json',
 ]
 
 for filename in darksky_net_files:
+    print(filename)
     with open(filename) as f:
-        data_json = f.read()
+        data_json = f
         obss = darksky_net.process_json(data_json)
-#        for obs in obss:
-#            print(obs)
-#            print()
+        for obs in obss:
+            print(obs)
+            print()
 
-# Get the data
-with open('test/darksky.net-currently.json') as f:
-    data_json = f.read()
-    current = darksky_net.process_json(data_json)[0]
-
-with open('test/darksky.net-hourly.json') as f:
-    data_json = f.read()
-    hourly = darksky_net.process_json(data_json)
-
-with open('test/darksky.net-daily.json') as f:
-    data_json = f.read()
-    daily = darksky_net.process_json(data_json)
+# # Get the data
+# with open('../test/data/darksky.net-currently.json') as f:
+#     data_json = f
+#     current = darksky_net.process_json(data_json)[0]
+# 
+# with open('../test/data/darksky.net-hourly.json') as f:
+#     data_json = f
+#     hourly = darksky_net.process_json(data_json)
+# 
+# with open('../test/data/darksky.net-daily.json') as f:
+#     data_json = f
+#     daily = darksky_net.process_json(data_json)
 
 # Update screen
 print('Christchurch - darksky.net')
+
+c_fmt = '{hour:02d}:{minute:02d} {temperature:2.0f} {rain:2.0f} {summary}'
 
 o = current
 tt = utime.localtime(o.time_ts)
@@ -131,10 +138,11 @@ print()
 #    print(c_fmt.format(hour=tt[3], minute=tt[4], temperature=o.temperature_C, rain=o.precipitation_mm, summary=o.summary))
 #print()
 
+d_fmt = '{month:02d}-{day:02d} {temperature_min:2.0f}/{temperature_max:2.0f} {rain:2.0f} {summary}'
+
 for o in daily[:5]:
     tt = utime.localtime(o.time_ts)
     print(d_fmt.format(month=tt[1], day=tt[2], temperature_min=o.temperature_min_C, temperature_max=o.temperature_max_C, rain=o.precipitation_mm, summary=o.summary))
 print()
 
 print()
-

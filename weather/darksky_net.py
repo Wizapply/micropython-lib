@@ -5,7 +5,12 @@ try:
 except ImportError:
     import json as ujson
 
-import weather_obs as wo
+try:
+    import ure as ure
+except ImportError:
+    import re as ure
+
+import weather.weather_obs as wo
 
 _cardinals = [
     'N',
@@ -55,45 +60,59 @@ _weather_obs_fields = [
     ( 'moon_phase', None, None, ),
 ]
 
-def process_json(data_json):
+
+def process_data(wdata):
+    wodata = {}
+    for o in wdata:
+        for f in _weather_obs_fields:
+            field_name = f[0]
+            path = f[1]
+            convert = f[2]
+            if path:
+                v = o
+                for p in path:
+                    try:
+                        v = v[p]
+                    except KeyError:
+                        v = None
+                        break
+            else:
+                v = None
+            if convert and v:
+                v = convert(v)
+            wodata[field_name] = v
+        obs = wo.Weather_obs(**wodata)
+
+    return obs
+
+
+def process_json(file):
     obss = []
 
-    pdata = ujson.loads(data_json)
-    for dtype in [ 'currently', 'hourly', 'daily' ]:
-        try:
-            wdata = pdata[dtype]
-        except KeyError:
-            wdata = None
-        
-        if not wdata:
-            continue
+    data = file.read(500).decode('utf-8')
+    m = None
 
-        if dtype == 'currently':
-            wdata = [ wdata ]
-        if dtype == 'hourly' or dtype == 'daily':
-            wdata = wdata['data']
+    week = []
+    daily = []
+    currently = []
+    
+    r = {}
 
-        wodata = {}
-        for o in wdata:
-            for f in _weather_obs_fields:
-                field_name = f[0]
-                path = f[1]
-                convert = f[2]
-                if path:
-                    v = o
-                    for p in path:
-                        try:
-                            v = v[p]
-                        except KeyError:
-                            v = None
-                            break
-                else:
-                    v = None
-                if convert and v:
-                    v = convert(v)
-                wodata[field_name] = v
-            obs = wo.Weather_obs(**wodata)
-            obss.append(obs)
+    m = ure.match('^{(.*?),"daily":{(.+?),"data":\[(.*?$)', data)
+    if m:
+        wdata = [ ujson.loads('{' + m.group(2) + '}') ]
+        week = process_data(wdata)
+        rest = m.group(3)
+        data = rest + file.read(1000).decode('utf-8')
+        m = ure.match('^({.+?})', data)
+        wwata = [ ujson.loads(m.group(1)) ]
+        daily = process_data(wdata)
+        return { 'week': week, 'daily': daily, 'currently': None}
+            
+    m = ure.match('^{(.*?),"currently":{(.+?)}', data)
+    if m:
+        wdata = [ ujson.loads('{' + m.group(2) + '}') ]
+        currently = process_data(wdata)
+        return { 'currently': currently, 'week': None, 'daily': None }
 
-    return obss
-
+    return None 
