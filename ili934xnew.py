@@ -48,6 +48,12 @@ _NGAMCTRL = const(0xe1) # Negative Gamma Control
 
 _CHUNK = const(1024) #maximum number of pixels per spi write
 
+def _get_width(font, text):
+    width = 0
+    for ch in text:
+        _, _, w =font.get_ch(ch)
+        width += w
+    return width
 
 def color565s(r, g=None, b=None):
     if not g and not b:
@@ -221,13 +227,13 @@ class ILI9341:
             self._data(mv[:rest*2])
     
     def text(self, text, x, y, font, fg, bg):
-        text_w  = font.get_width(text)
+        text_w  = _get_width(font, text)
         div, rem = divmod(font.height(),8)
         nbytes = div+1 if rem else div
         buf = bytearray(text_w * nbytes)
         pos = 0
         for ch in text:
-            glyph, char_w = font.get_ch(ch)
+            glyph, height, char_w = font.get_ch(ch)
             for row in range(nbytes):
                 index = row*text_w + pos
                 for i in range(char_w):

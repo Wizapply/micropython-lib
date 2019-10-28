@@ -41,6 +41,12 @@ class Font:
         self.ff = ff
 
     def text_width(self, text):
+        width = 0
+        for ch in text:
+            _, _, w =self.ff.get_ch(ch)
+            width += w
+        return width
+
         return self.ff.get_width(text)
     
     def text_height(self, text):
