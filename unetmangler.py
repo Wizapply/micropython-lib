@@ -41,7 +41,7 @@ class Net_Mangler:
         self.previous_connection_config = 0
         self.connection_attempt_config = 0
         self.wlan_ssid = None
-        self.maximum_duration = 60000
+        self.maximum_duration = 120000
 
         self.state_timestamp = utime.ticks_ms()
 
