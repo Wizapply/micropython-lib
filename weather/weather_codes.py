@@ -73,6 +73,21 @@ _codes = (
 
 
 """
+Weather icon-codes from
+* darksky.net
+* weatherbit.io
+* openweathermap.org
+"""
+
+"""
+Weather icon characters from
+* openweathermap.org
+* weatherbit.io
+"""
+
+
+
+"""
 Darksky icons
 
 

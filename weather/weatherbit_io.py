@@ -31,10 +31,10 @@ _weather_obs_fields = [
     ( 'moon_phase', ('moon_phase', ), None, ),
 ]
 
-def process_json(data_json):
+def process_json(file):
     obss = []
 
-    pdata = ujson.loads(data_json)
+    pdata = ujson.loads(file.read())
     wdata = pdata['data']
     wodata = {}
     for o in wdata:
