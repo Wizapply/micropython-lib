@@ -32,6 +32,27 @@ _cardinals = [
     'N',
 ]
 
+
+_icon_map = {
+    'clear-day'          : 'clear-day',
+    'clear-night'        : 'clear-night',
+    'partly-cloudy-day'  : 'cloudy-day',
+    'partly-cloudy-night': 'cloudy-night',
+    'cloudy'             : 'cloudy',
+    'fog'                : 'fog',
+    'rain'               : 'rain',
+    'sleet'              : 'sleet',
+    'snow'               : 'snow',
+    'wind'               : 'wind',
+    '_default_'          : '_unknown_',
+}
+
+def _icon_decode(icon):
+    try:
+        return _icon_map[icon]
+    except KeyError:
+        return _icon_map['_default_']
+
 def _bearing_to_cardinal(bearing):
     point = int((bearing+11.25) / 22.5)
     return _cardinals[point]
@@ -40,7 +61,7 @@ _weather_obs_fields = [
     ( 'time_ts', ('time', ), None, ),
     ( 'summary', ('summary', ), None, ),
     ( 'code',    None, None, ),
-    ( 'icon',    ('icon', ), None, ),
+    ( 'icon',    ('icon', ), _icon_decode, ),
     ( 'temperature_C', ('temperature', ), None, ),
     ( 'temperature_min_C', ('temperatureMin', ), None, ),
     ( 'temperature_max_C', ('temperatureMax', ), None, ),
