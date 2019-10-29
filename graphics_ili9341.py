@@ -55,34 +55,20 @@ class Font:
     def __str__(self):
         return '{}'.format(self.name)
 
+_font_map = {
+    'small' : 'DejaVuSans_12',
+    'medium' : 'DejaVuSans_16',
+    'medium-bold': 'DejaVuSans_Bold_16',
+    'large'      : 'DejaVuSans_20',
+    'large-bold' : 'DejaVuSans_Bold_20',
+    'weather-small' : 'PE_Icon_Set_Weather_24',
+}
+
 _fonts = {}
 
-try:
-    import fonts.DejaVuSans_12
-    _fonts['small'] = Font('DejaVuSans_12', fonts.DejaVuSans_12)
-except ImportError:
-    pass
-
-try:
-    import fonts.DejaVuSans_16
-    _fonts['medium'] = Font('DejaVuSans_16', fonts.DejaVuSans_16)
-except ImportError:
-    pass
-
-try:
-    import fonts.DejaVuSans_Bold_16
-    _fonts['medium-bold'] = Font('DejaVuSans_Bold_16', fonts.DejaVuSans_Bold_16)
-except ImportError:
-    pass
-
-try:
-    import fonts.DejaVuSans_20
-    _fonts['large'] = Font('DejaVuSans_20', fonts.DejaVuSans_20)
-except ImportError:
-    pass
-
-try:
-    import fonts.DejaVuSans_Bold_20
-    _fonts['large-bold'] = Font('DejaVuSans_Bold_20', fonts.DejaVuSans_Bold_20)
-except ImportError:
-    pass
+for alias, font_name in _font_map.items():
+    try:
+        font_module = __import__('fonts.' + font_name, None, None, [ font_name ])
+        _fonts[alias] = Font('DejaVuSans_12', font_module)
+    except ImportError:
+        pass
