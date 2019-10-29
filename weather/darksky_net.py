@@ -105,7 +105,7 @@ def process_json(file):
         rest = m.group(3)
         data = rest + file.read(1000).decode('utf-8')
         m = ure.match('^({.+?})', data)
-        wwata = [ ujson.loads(m.group(1)) ]
+        wdata = [ ujson.loads(m.group(1)) ]
         daily = process_data(wdata)
         return { 'week': week, 'daily': daily, 'currently': None}
             
